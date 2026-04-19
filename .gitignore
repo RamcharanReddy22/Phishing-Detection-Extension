@@ -1,0 +1,7 @@
+*.pkl
+*.csv
+*.db
+__pycache__/
+venv/
+*.pem
+tranco_top100k.txt
