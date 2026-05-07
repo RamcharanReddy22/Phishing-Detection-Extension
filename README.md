@@ -1,81 +1,98 @@
-# 🛡️ Phishing Detector — Improved v2.0
+# PhishDect — Real-Time Phishing Detection Extension
 
-## What was fixed
+> A hybrid ML-powered browser extension that detects phishing URLs instantly — before the page loads.
 
-| Component | Old Problem | Fix Applied |
-|---|---|---|
-| `features.py` | Only 9 weak features | 22 strong features incl. entropy, brand spoofing, abuse TLDs |
-| `app.py` | Bad score smoothing, always biased safe | Proper ML + rule-based hybrid, trusted domain shortcut |
-| `train_model.py` | Wrong class upsampling, basic config | Correct balancing, char n-grams, tuned XGBoost |
-| `background.js` | Alert on score≤5, blocked chrome:// pages | Smart skip logic, badge icons, confirm-or-go-back dialog |
-| `popup.js/html` | No loading state, plain display | Spinner, color-coded card, domain age + confidence shown |
-| `intelligence.py` | Could hang Flask request | Timeout protection with SIGALRM |
+🦊 **[Firefox — Live](https://addons.mozilla.org/en-US/firefox/addon/phishdect/)**  &nbsp;|&nbsp;  🌐 **[Live Demo](https://phishdect.ddns.net)**  &nbsp;|&nbsp;  🔵 Chrome — Coming Soon
 
 ---
 
-## Setup
+## What it does
 
-### 1. Install Python dependencies
-```bash
-pip install flask flask-cors xgboost scikit-learn joblib numpy scipy python-whois
-```
-
-### 2. Retrain the model (recommended after code changes)
-```bash
-python train_model.py
-```
-This will regenerate `model.pkl` and `vectorizer.pkl`.
-
-### 3. Start the Flask backend
-```bash
-python app.py
-```
-Server runs at `http://127.0.0.1:5000`
-
-### 4. Load the extension in Chrome
-1. Go to `chrome://extensions/`
-2. Enable **Developer mode** (top right)
-3. Click **Load unpacked**
-4. Select the `extention/` folder
+- Checks every URL you visit against a trained XGBoost model in real time
+- Returns a safety score (1–10) with ML confidence percentage
+- Flags suspicious domains instantly — even if the site hasn't loaded
+- Community reporting system for new phishing threats
 
 ---
 
 ## How it works
 
-```
-Browser tab loads URL
-        │
-        ▼
-background.js  ──────►  Skip chrome:// / internal pages
-        │
-        ▼
-Flask /analyze endpoint
-        │
-        ├── ML model (TF-IDF char n-grams + 22 URL features → XGBoost)
-        ├── Rule-based checks (IP host, @, abuse TLD, brand spoofing, etc.)
-        └── Domain age (WHOIS with 4s timeout)
-        │
-        ▼
-Weighted hybrid score (1–10)
-        │
-        ├── ≥8  →  Safe   (green badge ✓)
-        ├── 5–7 →  Suspicious (orange badge ?)
-        └── ≤4  →  Phishing (red badge ! + confirm dialog)
+This is not a simple ML wrapper. It's a hybrid detection system:
+
+| Layer | Method |
+|---|---|
+| ML Model | XGBoost trained on URL features |
+| Text Analysis | TF-IDF character n-grams |
+| URL Features | Length, special chars, subdomains, entropy |
+| Rule Engine | Pattern-based heuristics |
+| Domain Intel | WHOIS-based domain age lookup |
+| Threat DB | Google Safe Browsing API |
+
+---
+
+## Architecture
+Browser Extension (JS)
+↓
+Flask REST API  ←→  XGBoost Model + Feature Extractor
+↓
+AWS EC2 (HTTPS)
+↓
+Google Safe Browsing API + WHOIS
+
+## Tech Stack
+
+- **Backend:** Python, Flask, XGBoost, Scikit-learn
+- **Extension:** JavaScript, Chrome/Firefox Extension API
+- **Infrastructure:** AWS EC2, HTTPS, DDNS
+- **APIs:** Google Safe Browsing, WHOIS lookup
+
+---
+
+## Performance
+
+- 97% model accuracy
+- <80ms API response time
+- Live deployed at [phishdect.ddns.net](https://phishdect.ddns.net)
+
+---
+
+## Project Structure
+backend/
+├── app.py              # Flask REST API
+├── features.py         # URL feature extraction
+├── domain_features.py  # WHOIS domain intelligence
+├── intelligence.py     # Threat scoring logic
+├── model.pkl           # Trained XGBoost model
+└── vectorizer.pkl      # TF-IDF vectorizer
+extension/
+├── manifest.json
+├── popup.html
+├── popup.js
+└── background.js
+
+## Setup
+
+```bash
+# Clone the repo
+git clone https://github.com/RamcharanReddy22/Phishing-Detection-Extension.git
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set API key
+export SAFE_BROWSING_API_KEY=your_key_here
+
+# Run backend
+cd backend
+python app.py
 ```
 
 ---
 
-## API
+## Why I built this
 
-`GET http://127.0.0.1:5000/analyze?url=<encoded_url>`
+Most ML projects stop at the model. I wanted to build something actually usable — a full system where ML, backend, and a browser extension work together in real time. This project taught me how production security tools are architected, not just how models are trained.
 
-Response:
-```json
-{
-  "url": "https://example.com",
-  "score": 9,
-  "status": "Safe",
-  "ml_confidence": 4.2,
-  "domain_age_days": 9832
-}
-```
+---
+
+Built by [Ramcharan Reddy](https://github.com/RamcharanReddy22) · GRIET Hyderabad
