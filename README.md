@@ -8,19 +8,19 @@
 ## Screenshots
 
 ### Homepage
-![Homepage](screenshots/homepage.png)
+![Homepage](screenshots/HOMEPAGE.png)
 
 ### Safe Website Detection
-![Safe Detection](screenshots/safe-detection.png)
+![Safe Detection](screenshots/POPUP-UI.png)
 
 ### Phishing Website Detection
-![Phishing Detection](screenshots/phishing-detection.png)
+![Phishing Detection](screenshots/Phishing-Detected-UI.png)
 
 ### Community Reporting System
-![Report Page](screenshots/report-page.png)
+![Report Page](screenshots/Report-Site.png)
 
 ### Admin Panel
-![Admin Panel](screenshots/admin-panel.png)
+![Admin Panel](screenshots/Admin-Dashboard.png)
 
 ---
 
