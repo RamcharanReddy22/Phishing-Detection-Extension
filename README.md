@@ -95,4 +95,4 @@ Most ML projects stop at the model. I wanted to build something actually usable 
 
 ---
 
-Built by [Ramcharan Reddy](https://github.com/RamcharanReddy22) · GRIET Hyderabad
+Built by [Ramcharan Reddy](https://github.com/RamcharanReddy22) 
