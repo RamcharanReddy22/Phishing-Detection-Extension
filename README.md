@@ -5,6 +5,24 @@
 🦊 **[Firefox — Live](https://addons.mozilla.org/en-US/firefox/addon/phishdect/)**  &nbsp;|&nbsp;  🌐 **[Live Demo](https://phishdect.ddns.net)**  &nbsp;|&nbsp;  🔵 Chrome — Coming Soon
 
 ---
+## Screenshots
+
+### Homepage
+![Homepage](screenshots/homepage.png)
+
+### Safe Website Detection
+![Safe Detection](screenshots/safe-detection.png)
+
+### Phishing Website Detection
+![Phishing Detection](screenshots/phishing-detection.png)
+
+### Community Reporting System
+![Report Page](screenshots/report-page.png)
+
+### Admin Panel
+![Admin Panel](screenshots/admin-panel.png)
+
+---
 
 ## What it does
 
