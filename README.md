@@ -1,9 +1,101 @@
-# PhishDect — Real-Time Phishing Detection Extension
+Phishing Detection Extension
 
-> A hybrid ML-powered browser extension that detects phishing URLs instantly — before the page loads.
 
-🦊 **[Firefox — Live](https://addons.mozilla.org/en-US/firefox/addon/phishdect/)**  &nbsp;|&nbsp;  🌐 **[Live Demo](https://phishdect.ddns.net)**  &nbsp;|&nbsp;  🔵 Chrome — Coming Soon
+Real-time phishing detection browser extension powered by a 5-layer hybrid ML pipeline. Live on Chrome and Firefox.
 
+
+
+Live Backend: phishdect.ddns.net
+Firefox Add-on: addons.mozilla.org/en-US/firefox/addon/phishdect
+
+
+Why I built this
+
+I wanted to go beyond training a model and leaving it as a notebook. This is a full system — ML, backend, and browser extension working together in real time, deployed on AWS with 24/7 uptime.
+
+
+How it works
+
+Every URL you visit is checked through 5 layers:
+
+URL Input
+    │
+    ▼
+Layer 1: Google Safe Browsing API      → known phishing/malware database
+    │
+    ▼
+Layer 2: WHOIS Domain Age Check        → domains < 6 months = high risk
+    │
+    ▼
+Layer 3: URL Feature Extraction        → 30+ hand-crafted features
+         (length, subdomains, special chars, suspicious keywords, TLD, etc.)
+    │
+    ▼
+Layer 4: TF-IDF (char n-grams)         → XGBoost classifier
+         + hand-crafted features
+    │
+    ▼
+Layer 5: Risk Score Fusion             → weighted combination → score 1–10
+    │
+    ▼
+Browser Extension UI                   → green badge / warning / blocking popup
+
+Accuracy: 96.4% on a 1,000-URL test set (TP=482, TN=479, FP=21, FN=18)
+
+
+Why hybrid instead of just ML?
+
+No single layer is enough:
+
+
+Pure ML misses URLs already in known databases (Layer 1 catches these instantly)
+ML alone can't detect brand-new phishing domains registered hours ago (Layer 2 catches these)
+TF-IDF captures URL pattern signals that rule-based checks miss
+Score fusion gives defense-in-depth — each layer covers the others' blind spots
+
+
+
+Tech Stack
+
+ComponentTechnologyML ModelXGBoost + TF-IDF (char n-grams)Feature Engineeringscikit-learn, custom extractorsDomain IntelligenceWHOIS, Google Safe Browsing APIBackendFlask, Gunicorn, Flask-SQLAlchemyDatabaseSQLite (scan logging)Community ReportingGoogle Sheets APIBrowser ExtensionJavaScript, Manifest V3DeploymentAWS EC2, Nginx, systemd, Let's Encrypt SSL
+
+
+Project Structure
+
+Phishing-Detection-Extension/
+├── backend/
+│   ├── app.py              # Flask API — main endpoint: POST /check_url
+│   ├── features.py         # URL feature extraction (30+ features)
+│   ├── domain_features.py  # WHOIS domain age lookup
+│   ├── intelligence.py     # Google Safe Browsing API integration
+│   ├── model.pkl           # Trained XGBoost model
+│   └── vectorizer.pkl      # Fitted TF-IDF vectorizer
+├── extension/
+│   ├── manifest.json       # Chrome/Firefox Manifest V3
+│   ├── popup.html          # Extension UI
+│   ├── popup.js            # Handles user interaction + API call
+│   └── background.js       # Tab URL change listener
+└── requirements.txt
+
+
+Setup & Run
+
+Backend:
+
+bashcd backend
+pip install -r requirements.txt
+export SAFE_BROWSING_API_KEY=your_key_here
+python app.py
+
+Load Extension in Chrome:
+
+
+Go to chrome://extensions/
+Enable Developer Mode
+Click "Load unpacked" → select the extension/ folder
+
+
+Firefox: Install directly from addons.mozilla.org
 ---
 ## Screenshots
 
@@ -24,93 +116,35 @@
 
 ---
 
-## What it does
+Community Reporting
 
-- Checks every URL you visit against a trained XGBoost model in real time
-- Returns a safety score (1–10) with ML confidence percentage
-- Flags suspicious domains instantly — even if the site hasn't loaded
-- Community reporting system for new phishing threats
+Users can report suspicious URLs directly from the extension popup. Reports are logged to Google Sheets via the Sheets API, and reported URLs get their risk score boosted for all users — crowdsourcing catches newly-emerging phishing sites before databases pick them up.
 
----
 
-## How it works
+Deployment
 
-This is not a simple ML wrapper. It's a hybrid detection system:
+Flask backend deployed on AWS EC2 (Ubuntu) with:
 
-| Layer | Method |
-|---|---|
-| ML Model | XGBoost trained on URL features |
-| Text Analysis | TF-IDF character n-grams |
-| URL Features | Length, special chars, subdomains, entropy |
-| Rule Engine | Pattern-based heuristics |
-| Domain Intel | WHOIS-based domain age lookup |
-| Threat DB | Google Safe Browsing API |
 
----
+Gunicorn as WSGI server (multiple workers)
+Nginx as reverse proxy with SSL termination
+systemd service (phishsim) for 24/7 uptime
+Let's Encrypt SSL — live at phishdect.ddns.net
 
-## Architecture
-Browser Extension (JS)
-↓
-Flask REST API  ←→  XGBoost Model + Feature Extractor
-↓
-AWS EC2 (HTTPS)
-↓
-Google Safe Browsing API + WHOIS
 
-## Tech Stack
 
-- **Backend:** Python, Flask, XGBoost, Scikit-learn
-- **Extension:** JavaScript, Chrome/Firefox Extension API
-- **Infrastructure:** AWS EC2, HTTPS, DDNS
-- **APIs:** Google Safe Browsing, WHOIS lookup
+Future Work
 
----
 
-## Performance
+ Redis caching for WHOIS lookups (reduce 200-500ms latency)
+ Visual similarity detection vs. top-1000 brand logos
+ Levenshtein lookalike domain detection (e.g. paypa1.com vs paypal.com)
+ User feedback loop + periodic model retraining
+ Multilingual URL support (Telugu/Hindi)
+ Manifest V3 full migration
 
-- 97% model accuracy
-- <80ms API response time
-- Live deployed at [phishdect.ddns.net](https://phishdect.ddns.net)
 
----
 
-## Project Structure
-backend/
-├── app.py              # Flask REST API
-├── features.py         # URL feature extraction
-├── domain_features.py  # WHOIS domain intelligence
-├── intelligence.py     # Threat scoring logic
-├── model.pkl           # Trained XGBoost model
-└── vectorizer.pkl      # TF-IDF vectorizer
-extension/
-├── manifest.json
-├── popup.html
-├── popup.js
-└── background.js
+Demo
 
-## Setup
-
-```bash
-# Clone the repo
-git clone https://github.com/RamcharanReddy22/Phishing-Detection-Extension.git
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Set API key
-export SAFE_BROWSING_API_KEY=your_key_here
-
-# Run backend
-cd backend
-python app.py
-```
-
----
-
-## Why I built this
-
-Most ML projects stop at the model. I wanted to build something actually usable — a full system where ML, backend, and a browser extension work together in real time. This project taught me how production security tools are architected, not just how models are trained.
-
----
-
-Built by [Ramcharan Reddy](https://github.com/RamcharanReddy22) 
+LinkedIn Demo Post(https://www.linkedin.com/posts/ramcharan-reddy-5994402a3_cybersecurity-machinelearning-chromeextension-ugcPost-7448353586692112385-7eg4/?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEk2p0UB3k_-e_CGd6FWjo_QAFsWaJjr5dY) 
